@@ -1,4 +1,6 @@
 # Logs
+deno.lock
+
 logs
 *.log
 npm-debug.log*

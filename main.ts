@@ -1,3 +1,5 @@
+import { serveFile } from "jsr:@std/http/file-server";
+
 const kv = await Deno.openKv();
 
 // Set global state
@@ -43,7 +45,7 @@ async function handler(req: Request): Response {
     const url: URL_KV = { url_key: url_key, url_val: url_val };
     await kv.set(["urls", url.url_key], url);
 
-    return new Response(`For url "${url_val}", key set to: ${url_key}`);
+    return resp(`For url "${url_val}", key set to: ${url_key}`, 200);
   } else if (match_key && match_key.pathname.groups.id !== "favicon.ico") {
     // Check for /:id
     // Fetching value for key: id
@@ -82,15 +84,29 @@ To use the service for assciated key, go to
 Example:
   https://short.apurva-mishra.com/1
 `;
-    return new Response(message);
+    return resp(message, 200);
   } else {
-    return new Response(
-      "You are on incorrect path, please go to /set/inst for instructions",
-      {
-        status: 404,
-      },
-    );
+    const pathname = new URL(req.url).pathname;
+
+    if (pathname === "/") {
+      return serveFile(req, "./main.html");
+    }
+
+    return Response.redirect("https://short.apurva-mishra.com/");
   }
 }
 
 Deno.serve(handler);
+
+// util
+function resp(msg: string, status: number): Response {
+  const body = JSON.stringify({ message: msg });
+  return new Response(body, {
+    status: status,
+    headers: {
+      "content-type": "application/json; charset=utf-8",
+    },
+  });
+}
+
+
