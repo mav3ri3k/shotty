@@ -158,12 +158,12 @@
       .showing {
         opacity: 1;
         display: block;
-        transition: opacity 1s, display 1s allow-discrete;
+        transition: opacity 0.7s, display 1s allow-discrete;
       }
       .hiding {
         display: none;
         opacity: 0;
-        transition: opacity 1s, display 1s allow-discrete;
+        transition: opacity 0.7s, display 1s allow-discrete;
       }
       @starting-style {
         .showing {
@@ -178,6 +178,12 @@
 
       .github-link:hover {
         transform: scale(1.1);
+      }
+      input {
+        margin: 5px 0px;
+      }
+      button {
+        margin: 5px 0px;
       }
     </style>
   </head>
@@ -222,7 +228,6 @@
         <div id="rec" class="hiding">
           <div id="key"></div>
           <div>
-            <div id="check">Check at:</div>
             <a
               id="link"
               href="/a"
@@ -239,6 +244,7 @@
       const sup = document.getElementById("super");
       const rec = document.getElementById("rec");
       const host = window.location.host;
+
       function submit_website() {
         result.classList.remove("hiding");
         result.classList.add("showing");
@@ -253,8 +259,6 @@
           return;
         }
         const url = { val: website };
-        console.log(url);
-        console.log(JSON.stringify(url));
 
         fetch("/set/", {
           method: "POST",
@@ -267,9 +271,6 @@
           .then((data) => {
             const key = data.key;
             const val = data.val;
-
-            const check = document.getElementById("check");
-            check.innerText = "Check at: ";
 
             const heading_key = document.getElementById("key");
             heading_key.innerText = "Your Key is: " + key;
