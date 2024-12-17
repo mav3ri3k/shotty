@@ -1,4 +1,4 @@
-import { serveFile } from "jsr:@std/http/file-server";
+import { serveFile, serverDir } from "jsr:@std/http/file-server";
 const kv = await Deno.openKv();
 
 interface Url_KV {
