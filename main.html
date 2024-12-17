@@ -421,8 +421,6 @@
     <section>
       <form>
         <h2>URL Shortner</h2>
-        <label for="input1">Key:</label>
-        <input type="text" id="key" name="key" size="20" placeholder="key" />
         <label for="select1">Website:</label>
         <input
           type="text"
@@ -436,11 +434,12 @@
     </section>
     <script>
       const form = document.querySelector("form");
+      const host = window.location.host;
+      console.log(host);
 
       form.addEventListener("submit", (event) => {
         event.preventDefault(); // Prevent default form submission
 
-        const key = document.getElementById("key").value;
         const website = document.getElementById("website").value;
 
         // Validate website format
@@ -448,25 +447,25 @@
           alert('Please enter a valid website URL starting with "https://"');
           return;
         }
+        const url = { val: website };
 
-        // Send the request to the server
-        fetch(`https://short.apurva-mishra.com/set/${key}/${website}`)
-          .then((response) => {
-              console.log(response)
-            if (response.ok) {
-              // Handle successful response
-              alert("URL shortened successfully!");
-              // You might want to redirect the user or display a success message here
-            } else {
-              // Handle error response
-              alert("An error occurred. Please try again.");
-            }
+        fetch(`${host}/set/`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(url),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            const key = data.key;
+            const val = data.val;
+
+            console.log("Key:", key);
+            console.log("Value:", val);
           })
           .catch((error) => {
-            console.error("Error:", error);
-            alert(
-              "An error occurred. Please check your network connection and try again.",
-            );
+            console.error("Error fetching data:", error);
           });
       });
     </script>

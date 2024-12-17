@@ -1,112 +1,61 @@
 import { serveFile } from "jsr:@std/http/file-server";
-
 const kv = await Deno.openKv();
 
-// Set global state
-const top_key = ["top_val", "val"];
-const top = await kv.get(top_key);
-console.log(top);
-
-if (top.value == null) {
-  await kv.set(top_key, 0);
-}
-
-const url: URL_KV = { url_key: "1", url_val: "https://www.google.com" };
-await kv.set(["urls", url.url_key], url);
-
 interface Url_KV {
-  url_key: string;
-  url_val: string;
+  key: number;
+  val: string;
 }
+
+const URL_KEY = new URLPattern({ pathname: "/:id" });
+const URL_SET_VAL = new URLPattern({ pathname: "/set/" });
 
 // Handler
-const URL_KEY_ROUTE = new URLPattern({ pathname: "/:id" });
-const INST = new URLPattern({ pathname: "/set/inst" });
-const URL_SET = new URLPattern({ pathname: "/set/:id/*" });
-
 async function handler(req: Request): Response {
-  const match_key = URL_KEY_ROUTE.exec(req.url);
-  const match_inst = INST.exec(req.url);
-  if (URL_SET.test(req.url)) {
-    // Check for /set/:id/
-    // Set key value pair
-    console.log("Set key value pair");
+  // set key val
+  if (URL_SET_VAL.exec(req.url)) {
+    // counter to top unused key
+    const top_key = ["top_key", "key"];
+    const top = await kv.get(top_key);
 
-    const url_key = req.url.split("/set/")[1].split("/")[0];
-    const url_val = req.url.split("/set/")[1].split(url_key + "/")[1];
-
-    console.log("url key: " + url_key);
-    console.log("url val: " + url_val);
-
-    if (url_key == "1") {
-      return new Response(`1 is default key, please try another value`);
+    if (top.value == null) {
+      await kv.set(top_key, 1);
     }
 
-    const url: URL_KV = { url_key: url_key, url_val: url_val };
-    await kv.set(["urls", url.url_key], url);
+    // parse request
+    const data = await req.json();
+    const url_kv: URL_KV = { key: top.value, val: data.val };
 
-    return resp(`For url "${url_val}", key set to: ${url_key}`, 200);
-  } else if (match_key && match_key.pathname.groups.id !== "favicon.ico") {
-    // Check for /:id
-    // Fetching value for key: id
-    console.log("Forwarding..");
+    // store in database
+    await kv.set(["urls", url_kv.key], url_kv);
+    await kv.set(top_key, top.value + 1);
 
-    const id = match_key.pathname.groups.id;
-    console.log("id: " + id);
+    // return response
+    const jsonResp = JSON.stringify(url_kv);
+    return new Response(jsonResp, {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
-    const record = await kv.get(["urls", id]);
-    if (record.value == null) {
-      // sanitize data
-      return new Response(`Url for key: ${id}, not found`, {
+    // get key and redirect
+  } else if (URL_KEY.exec(req.url)) {
+    let id: number = parseInt(URL_KEY.exec(req.url).pathname.groups.id);
+
+    const val = await kv.get(["urls", id]);
+
+    if (val.value != null) {
+      return Response.redirect(val.value.val);
+    } else {
+      return new Response("Invalid URL KEY", {
         status: 404,
       });
     }
 
-    const url: Url_KV = record.value as Url_KV;
-
-    return Response.redirect(url.url_val);
-  } else if (match_inst && match_inst.pathname.groups.id !== "favicon.ico") {
-    const message: string = `To set a new key for a url, go to route:
-  https://short.apurva-mishra.com/set/{key}/{url}
-
-Replace {key} and {url} with:
-  key = desired key for given url
-  url = url associated with key
-
-Example:
-  https://short.apurva-mishra.com/set/1/https://www.google.com
-
-------------------------------------------
-
-To use the service for assciated key, go to
-  https://short.apurva-mishra.com/{key}
-
-Example:
-  https://short.apurva-mishra.com/1
-`;
-    return resp(message, 200);
+    // return ui
   } else {
-    const pathname = new URL(req.url).pathname;
-
-    if (pathname === "/") {
-      return serveFile(req, "./main.html");
-    }
-
-    return Response.redirect("https://short.apurva-mishra.com/");
+    return serveFile(req, "./main.html");
   }
 }
 
 Deno.serve(handler);
-
-// util
-function resp(msg: string, status: number): Response {
-  const body = JSON.stringify({ message: msg });
-  return new Response(body, {
-    status: status,
-    headers: {
-      "content-type": "application/json; charset=utf-8",
-    },
-  });
-}
-
-
