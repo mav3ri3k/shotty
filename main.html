@@ -218,26 +218,31 @@
         <button id="submit" onclick="submit_website()">Generate Key</button>
       </div>
       <div id="result" class="hiding">
-        <h3>Super!</h3>
-        <div id="key"></div>
-        <div>
-          Check at: <a
-            id="link"
-            href="/a"
-            target="_blank"
-            rel="noopener noreferrer"
-          ></a>
+        <h3 id="super">Super!</h3>
+        <div id="rec" class="hiding">
+          <div id="key"></div>
+          <div>
+            <div id="check">Check at:</div>
+            <a
+              id="link"
+              href="/a"
+              target="_blank"
+              rel="noopener noreferrer"
+            ></a>
+          </div>
         </div>
       </div>
     </div>
     <script>
       const submit_butt = document.getElementById("address-bar");
       const result = document.getElementById("result");
+      const sup = document.getElementById("super");
+      const rec = document.getElementById("rec");
       const host = window.location.host;
       function submit_website() {
-        console.log("some");
         result.classList.remove("hiding");
         result.classList.add("showing");
+
         event.preventDefault(); // Prevent default form submission
 
         const website = document.getElementById("address-bar").value;
@@ -263,16 +268,24 @@
             const key = data.key;
             const val = data.val;
 
+            const check = document.getElementById("check");
+            check.innerText = "Check at: ";
+
             const heading_key = document.getElementById("key");
             heading_key.innerText = "Your Key is: " + key;
             const link = document.getElementById("link");
             link.innerText = `${host}/${key}`;
             link.href = `/${key}`;
+
+            rec.classList.remove("hiding");
+            rec.classList.add("showing");
             console.log("Key:", key);
             console.log("Value:", val);
           })
           .catch((error) => {
-            console.error("Error fetching data:", error);
+            rec.classList.add("hiding");
+            rec.classList.remove("showing");
+            sup.innerText = "Error Occured!";
           });
       }
     </script>
