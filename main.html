@@ -431,6 +431,7 @@
         />
         <button type="submit">Submit</button>
       </form>
+      <h2 id="key"></h2>
     </section>
     <script>
       const form = document.querySelector("form");
@@ -448,8 +449,11 @@
           return;
         }
         const url = { val: website };
+        console.log(url);
+        console.log(JSON.stringify(url));
+        console.log(`${host}/set/`);
 
-        fetch(`${host}/set/`, {
+        fetch("/set/", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -461,6 +465,8 @@
             const key = data.key;
             const val = data.val;
 
+            const heading_key = document.getElementById("key");
+            heading_key.innerText = key;
             console.log("Key:", key);
             console.log("Value:", val);
           })
